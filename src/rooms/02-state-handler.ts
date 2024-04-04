@@ -3,7 +3,10 @@ import { Schema, type, MapSchema } from "@colyseus/schema";
 
 export class Player extends Schema {
     @type("int8")
-    hp = 0;
+    currentHP = 0;
+
+    @type("int8")
+    maxHP = 0;
 
     @type("number")
     speed = 0;
@@ -44,7 +47,8 @@ export class State extends Schema {
 
     createPlayer(sessionId: string, data: any) {
         const player = new Player();
-        player.hp = data.hp;
+        player.maxHP = data.hp;
+        player.currentHP = data.hp;
         player.speed = data.speed;
 
         this.players.set(sessionId, player);
@@ -89,6 +93,12 @@ export class StateHandlerRoom extends Room<State> {
         this.onMessage("shoot", (client, data) => {
             //рассыламе всем кроме того кто прислал
             this.broadcast("Shoot", data, {except: client});
+        });
+
+        this.onMessage("damage", (client, data) => {
+            //урон
+            const player = this.state.players.get(data.id);
+            player.currentHP -= data.value;
         });
     }
 
